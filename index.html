@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulatore Mutuo Casa – confronto scenari ed estinzione anticipata</title>
+  <meta name="description" content="Simulatore di mutuo casa italiano: tasso fisso, variabile e misto, confronto scenari, estinzione anticipata, stress test, affitto vs acquisto.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">🏠</div>
+    <div>Simulatore Mutuo Casa<small>Italia · confronto scenari · estinzione anticipata</small></div>
+  </div>
+  <nav class="actions" aria-label="Azioni">
+    <button class="btn" id="btnShare" title="Copia un link con tutti i dati inseriti">🔗 <span class="lbl">Condividi</span></button>
+    <button class="btn" id="btnExport" title="Scarica i dati in formato JSON">💾 <span class="lbl">Esporta</span></button>
+    <button class="btn" id="btnImport" title="Carica un file JSON esportato in precedenza">📂 <span class="lbl">Importa</span></button>
+    <input type="file" id="fileImport" accept="application/json,.json" hidden>
+    <button class="btn" id="btnPrint" title="Stampa o salva in PDF la scheda corrente">🖨️ <span class="lbl">Stampa / PDF</span></button>
+    <button class="btn" id="btnReset" title="Ripristina i dati di esempio">↺ <span class="lbl">Reset</span></button>
+    <button class="btn" id="btnTheme" title="Tema chiaro / scuro">🌓</button>
+  </nav>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sezioni">
+  <button class="tab active" data-tab="scenari" role="tab">📝 Scenari</button>
+  <button class="tab" data-tab="confronto" role="tab">🏆 Confronto &amp; migliore</button>
+  <button class="tab" data-tab="piano" role="tab">📅 Piano di ammortamento</button>
+  <button class="tab" data-tab="estinzione" role="tab">💶 Estinzione anticipata</button>
+  <button class="tab" data-tab="stress" role="tab">⚡ Stress test &amp; sostenibilità</button>
+  <button class="tab" data-tab="affitto" role="tab">🔑 Affitto vs acquisto</button>
+  <button class="tab" data-tab="guida" role="tab">📘 Guida</button>
+</nav>
+
+<main>
+  <!-- ======================= SCENARI ======================= -->
+  <section class="tab-panel active" id="tab-scenari" role="tabpanel">
+    <div class="layout-scenari">
+      <div class="stack">
+        <details class="card" id="profileCard" open>
+          <summary class="card-head" style="cursor:pointer;list-style:none">
+            <h2>👤 Il tuo profilo</h2><span class="spacer"></span><small>usato per sostenibilità, confronto ed estinzione</small>
+          </summary>
+          <div class="fields">
+            <label class="field"><span>Reddito netto mensile familiare <em class="tip" title="Somma degli stipendi netti mensili (12 mensilità equivalenti).">?</em></span><div class="inp"><input type="number" data-profile="reddito" min="0" step="100"><i>€</i></div></label>
+            <label class="field"><span>Altre rate mensili in corso</span><div class="inp"><input type="number" data-profile="altreRate" min="0" step="50"><i>€</i></div></label>
+            <label class="field"><span>Liquidità disponibile oggi <em class="tip" title="Risparmi totali disponibili per anticipo, spese ed eventuali versamenti straordinari.">?</em></span><div class="inp"><input type="number" data-profile="liquidita" min="0" step="1000"><i>€</i></div></label>
+            <label class="field"><span>Spese mensili (esclusa rata)</span><div class="inp"><input type="number" data-profile="speseMensili" min="0" step="100"><i>€</i></div></label>
+            <label class="field"><span>Fondo emergenza (mesi di spese) <em class="tip" title="Liquidità da tenere sempre da parte: non viene mai usata per anticipo o estinzioni.">?</em></span><div class="inp"><input type="number" data-profile="mesiEmergenza" min="0" step="1"><i>mesi</i></div></label>
+            <label class="field"><span>Età del richiedente più anziano</span><div class="inp"><input type="number" data-profile="eta" min="18" max="90" step="1"><i>anni</i></div></label>
+            <label class="field"><span>Rendimento alternativo lordo <em class="tip" title="Rendimento annuo atteso di un investimento alternativo (es. BTP, ETF obbligazionari). Serve per capire se conviene estinguere o investire.">?</em></span><div class="inp"><input type="number" data-profile="rendAlt" min="0" step="0.1"><i>%</i></div></label>
+            <label class="field"><span>Tassazione rendimento</span>
+              <select data-profile="tassaAlt">
+                <option value="12.5">12,5% (titoli di Stato)</option>
+                <option value="26">26% (ETF, fondi, azioni)</option>
+                <option value="0">0% (nessuna)</option>
+              </select></label>
+            <label class="field"><span>Inflazione attesa</span><div class="inp"><input type="number" data-profile="inflazione" min="0" step="0.1"><i>%</i></div></label>
+            <label class="field"><span>Rata/reddito massima <em class="tip" title="Le banche italiane accettano in genere una rata fino al 30-35% del reddito netto.">?</em></span><div class="inp"><input type="number" data-profile="quotaMax" min="10" max="60" step="1"><i>%</i></div></label>
+          </div>
+          <div class="hint" id="profileHint"></div>
+        </details>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>🏷️ Scenari</h2>
+            <div class="chip-actions">
+              <select id="presetSel" title="Aggiungi un nuovo scenario partendo da un modello">
+                <option value="">➕ Aggiungi scenario…</option>
+                <option value="copia">Copia dello scenario attivo</option>
+                <option value="fisso20">Tasso fisso 20 anni</option>
+                <option value="fisso25">Tasso fisso 25 anni</option>
+                <option value="fisso30">Tasso fisso 30 anni</option>
+                <option value="variabile">Tasso variabile (Euribor + spread)</option>
+                <option value="variabileCap">Variabile con CAP</option>
+                <option value="variabileRialzo">Variabile con Euribor in rialzo</option>
+                <option value="misto">Tasso misto (fisso 5 anni, poi variabile)</option>
+                <option value="italiano">Ammortamento all'italiana</option>
+                <option value="anticipo30">Anticipo 30%</option>
+              </select>
+              <button class="btn small" id="btnDup" title="Duplica lo scenario attivo">⧉ Duplica</button>
+              <button class="btn small danger" id="btnDel" title="Elimina lo scenario attivo">🗑 Elimina</button>
+            </div>
+          </div>
+          <div class="chips" id="chips"></div>
+        </div>
+
+        <form class="card" id="scForm" autocomplete="off" onsubmit="return false">
+          <fieldset class="group">
+            <legend>Generale</legend>
+            <div class="fields">
+              <label class="field"><span>Nome scenario</span><input type="text" data-field="nome" maxlength="40"></label>
+              <label class="field"><span>Colore</span><input type="color" data-field="colore"></label>
+              <label class="field"><span>Data rogito / erogazione</span><input type="month" data-field="dataInizio"></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>🏠 Immobile e acquisto</legend>
+            <div class="fields">
+              <label class="field"><span>Prezzo della casa</span><div class="inp"><input type="number" data-field="prezzo" min="0" step="1000"><i>€</i></div></label>
+              <label class="field"><span>Capitale iniziale (anticipo)</span><div class="inp"><input type="number" data-field="anticipo" min="0" step="1000"><i>€</i></div><small class="hint" data-hint="anticipo"></small></label>
+              <label class="field"><span>Anticipo in %</span><input type="range" data-anticipo-pct min="0" max="100" step="1"><small class="hint" data-hint="anticipoPct"></small></label>
+              <label class="field"><span>Tipo di abitazione</span>
+                <select data-field="tipoCasa"><option value="prima">Prima casa</option><option value="seconda">Seconda casa</option></select>
+                <small class="hint" data-hint="tipoCasa"></small></label>
+              <label class="field"><span>Venditore</span>
+                <select data-field="venditore"><option value="privato">Privato (imposta di registro)</option><option value="impresa">Impresa costruttrice (IVA)</option></select>
+                <small class="hint" data-hint="venditore"></small></label>
+              <label class="field" data-show="venditore=privato"><span>Rendita catastale <em class="tip" title="Dalla visura catastale. Base imponibile (prezzo-valore) = rendita × 1,05 × 110 (prima casa) o 120 (seconda). Se 0 si usa il prezzo.">?</em></span><div class="inp"><input type="number" data-field="renditaCatastale" min="0" step="10"><i>€</i></div><small class="hint" data-hint="rendita"></small></label>
+              <label class="field"><span>Provvigione agenzia</span><div class="inp"><input type="number" data-field="agenziaPerc" min="0" step="0.5"><i>%</i></div><small class="hint" data-hint="agenzia"></small></label>
+              <label class="field check"><input type="checkbox" data-field="agenziaIva"><span>Provvigione + IVA 22%</span></label>
+              <label class="field"><span>Notaio (atto di compravendita)</span><div class="inp"><input type="number" data-field="notaioAcquisto" min="0" step="100"><i>€</i></div></label>
+              <label class="field"><span>Altre spese (trasloco, lavori…)</span><div class="inp"><input type="number" data-field="altreSpese" min="0" step="100"><i>€</i></div></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>🏦 Mutuo</legend>
+            <div class="fields">
+              <label class="field"><span>Durata (anni)</span><div class="inp"><input type="number" data-field="durataAnni" min="0" max="40" step="1"><i>anni</i></div><small class="hint" data-hint="durata"></small></label>
+              <label class="field"><span>+ mesi</span><div class="inp"><input type="number" data-field="durataMesi" min="0" max="11" step="1"><i>mesi</i></div></label>
+              <label class="field"><span>Frequenza rate</span>
+                <select data-field="frequenza"><option value="12">Mensile</option><option value="4">Trimestrale</option><option value="2">Semestrale</option><option value="1">Annuale</option></select></label>
+              <label class="field"><span>Ammortamento <em class="tip" title="Francese: rata costante (a parità di tasso). Italiano: quota capitale costante, rata decrescente, meno interessi totali.">?</em></span>
+                <select data-field="ammortamento"><option value="francese">Francese (rata costante)</option><option value="italiano">Italiano (rata decrescente)</option></select></label>
+              <label class="field"><span>Tipo di tasso</span>
+                <select data-field="tipoTasso"><option value="fisso">Fisso</option><option value="variabile">Variabile</option><option value="misto">Misto (fisso poi variabile)</option></select></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>📈 Tasso di interesse</legend>
+            <div class="fields">
+              <label class="field" data-show="tipoTasso=fisso|misto"><span>TAN fisso</span><div class="inp"><input type="number" data-field="tanFisso" min="0" step="0.05"><i>%</i></div></label>
+              <label class="field" data-show="tipoTasso=misto"><span>Anni a tasso fisso</span><div class="inp"><input type="number" data-field="anniFissi" min="1" max="30" step="1"><i>anni</i></div></label>
+              <label class="field" data-show="tipoTasso=variabile|misto"><span>Euribor attuale <em class="tip" title="Indice di riferimento (es. Euribor 1 o 3 mesi). Può essere negativo.">?</em></span><div class="inp"><input type="number" data-field="euribor" step="0.05"><i>%</i></div></label>
+              <label class="field" data-show="tipoTasso=variabile|misto"><span>Spread della banca</span><div class="inp"><input type="number" data-field="spread" min="0" step="0.05"><i>%</i></div><small class="hint" data-hint="tan"></small></label>
+              <label class="field" data-show="tipoTasso=variabile|misto"><span>Scenario Euribor futuro</span>
+                <select data-field="euriborScenario"><option value="costante">Costante</option><option value="lineare">Variazione graduale verso un valore</option><option value="personalizzato">Personalizzato anno per anno</option></select></label>
+              <label class="field" data-show="tipoTasso=variabile|misto;euriborScenario=lineare"><span>Euribor obiettivo</span><div class="inp"><input type="number" data-field="euriborTarget" step="0.05"><i>%</i></div></label>
+              <label class="field" data-show="tipoTasso=variabile|misto;euriborScenario=lineare"><span>Raggiunto in</span><div class="inp"><input type="number" data-field="euriborAnni" min="1" max="40" step="1"><i>anni</i></div></label>
+              <label class="field wide" data-show="tipoTasso=variabile|misto;euriborScenario=personalizzato"><span>Euribor per anno (separati da ; ) – l'ultimo valore resta fino a fine mutuo</span><input type="text" data-field="euriborCustom" placeholder="es. 2,1; 2,3; 2,6; 3; 3"></label>
+              <label class="field" data-show="tipoTasso=variabile|misto"><span>Floor (TAN minimo)</span><div class="inp"><input type="number" data-field="floor" step="0.05"><i>%</i></div></label>
+              <label class="field check" data-show="tipoTasso=variabile|misto"><input type="checkbox" data-field="capAttivo"><span>Tasso con CAP (tetto massimo)</span></label>
+              <label class="field" data-show="tipoTasso=variabile|misto;capAttivo=true"><span>CAP (TAN massimo)</span><div class="inp"><input type="number" data-field="cap" min="0" step="0.05"><i>%</i></div></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>🧾 Costi del mutuo</legend>
+            <div class="fields">
+              <label class="field"><span>Istruttoria</span><div class="inp"><input type="number" data-field="istruttoria" min="0" step="50"><i>€</i></div></label>
+              <label class="field"><span>Perizia</span><div class="inp"><input type="number" data-field="perizia" min="0" step="50"><i>€</i></div></label>
+              <label class="field"><span>Notaio (atto di mutuo)</span><div class="inp"><input type="number" data-field="notaioMutuo" min="0" step="100"><i>€</i></div></label>
+              <label class="field"><span>Mediazione creditizia</span><div class="inp"><input type="number" data-field="mediazione" min="0" step="100"><i>€</i></div></label>
+              <label class="field"><span>Incasso rata (per rata)</span><div class="inp"><input type="number" data-field="incassoRata" min="0" step="0.5"><i>€</i></div></label>
+              <label class="field"><span>Altre spese annue (conto, comunicazioni)</span><div class="inp"><input type="number" data-field="speseAnnue" min="0" step="10"><i>€</i></div></label>
+            </div>
+            <small class="hint" data-hint="sostitutiva"></small>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>🛡️ Assicurazioni e fisco</legend>
+            <div class="fields">
+              <label class="field"><span>Polizza incendio e scoppio (annua) <em class="tip" title="Obbligatoria per legge sui mutui ipotecari.">?</em></span><div class="inp"><input type="number" data-field="assIncendio" min="0" step="10"><i>€</i></div></label>
+              <label class="field"><span>Polizza vita / CPI (annua)</span><div class="inp"><input type="number" data-field="assCpi" min="0" step="10"><i>€</i></div></label>
+              <label class="field check"><input type="checkbox" data-field="cpiObbligatoria"><span>CPI richiesta dalla banca (entra nel TAEG)</span></label>
+              <label class="field check"><input type="checkbox" data-field="detrazione"><span>Detrazione IRPEF 19% interessi (prima casa)</span></label>
+            </div>
+            <small class="hint" data-hint="detrazione"></small>
+          </fieldset>
+        </form>
+      </div>
+
+      <aside class="sticky">
+        <div class="card summary" id="summary"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ======================= CONFRONTO ======================= -->
+  <section class="tab-panel" id="tab-confronto" role="tabpanel">
+    <p class="panel-intro">Tutti gli scenari vengono confrontati su costo totale, rata, rischio di rialzo dei tassi (Euribor +2%), liquidità richiesta al rogito e valore attuale dei costi. Il punteggio dipende dalla priorità che scegli; vincoli bancari e di liquidità generano penalità.</p>
+    <div class="grid c2">
+      <div id="winner"></div>
+      <div class="card">
+        <div class="card-head"><h2>Classifica</h2><span class="spacer"></span>
+          <label class="row" style="gap:6px"><small>Priorità</small>
+            <select data-profile="priorita" style="width:auto">
+              <option value="bilanciato">Bilanciata</option>
+              <option value="costo">Spendere meno in totale</option>
+              <option value="rata">Rata più bassa</option>
+              <option value="rischio">Minimo rischio tassi</option>
+              <option value="valore">Valore attuale (costo-opportunità)</option>
+            </select></label>
+        </div>
+        <ul class="ranking" id="ranking"></ul>
+        <small id="weightsInfo"></small>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><h2>Tabella di confronto</h2><span class="spacer"></span><small>🟩 migliore · 🟥 peggiore</small></div>
+      <div class="table-wrap nolimit" id="cmpTable"></div>
+    </div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card"><h3>Debito residuo nel tempo</h3><div class="chart-box"><canvas id="chResidui"></canvas></div></div>
+      <div class="card"><h3>Interessi pagati cumulati</h3><div class="chart-box"><canvas id="chInteressiCum"></canvas></div></div>
+      <div class="card"><h3>Rata mensile media per anno</h3><div class="chart-box"><canvas id="chRate"></canvas></div></div>
+      <div class="card"><h3>Composizione dei costi (oltre al prezzo)</h3><div class="chart-box"><canvas id="chComposizione"></canvas></div></div>
+      <div class="card"><h3>Profilo degli scenari (100 = migliore)</h3><div class="chart-box"><canvas id="chRadar"></canvas></div></div>
+      <div class="card"><h3>Esborso totale per scenario</h3><div class="chart-box"><canvas id="chTotali"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ======================= PIANO ======================= -->
+  <section class="tab-panel" id="tab-piano" role="tabpanel">
+    <div class="card">
+      <div class="card-head">
+        <h2>Piano di ammortamento</h2><span class="spacer"></span>
+        <select data-ui="piano.sc" data-scselect style="width:auto"></select>
+        <div class="pill-group" data-pill="piano.view"><button data-v="anni">Annuale</button><button data-v="rate">Per rata</button></div>
+        <label class="row" style="gap:6px" title="Applica il piano di versamenti straordinari definito nella scheda Estinzione anticipata"><input type="checkbox" data-ui="piano.plan"><small>Con piano di estinzione</small></label>
+        <button class="btn small" id="btnCsv">⬇️ CSV / Excel</button>
+      </div>
+      <div class="kpis" id="pianoKpis"></div>
+    </div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card"><h3>Quota capitale e quota interessi per anno</h3><div class="chart-box tall"><canvas id="chPianoBar"></canvas></div></div>
+      <div class="card"><h3>Rata nominale e reale (al netto dell'inflazione)</h3><div class="chart-box tall"><canvas id="chPianoReale"></canvas></div></div>
+      <div class="card"><h3>Dove vanno i tuoi soldi</h3><div class="chart-box pie"><canvas id="chPianoTorta"></canvas></div></div>
+      <div class="card"><h3>Liquidità necessaria al rogito</h3><div class="chart-box pie"><canvas id="chPianoRogito"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="table-wrap" id="pianoTable"></div>
+    </div>
+  </section>
+
+  <!-- ======================= ESTINZIONE ======================= -->
+  <section class="tab-panel" id="tab-estinzione" role="tabpanel">
+    <p class="panel-intro">Versare una somma per ridurre il debito “rende” quanto il tasso del mutuo (al netto della detrazione persa), senza rischi. Conviene se questo rendimento supera quello netto dell'investimento alternativo e se resta un risparmio significativo. Per legge (L. 40/2007 “Bersani”) sui mutui per la casa non ci sono penali.</p>
+    <div class="card">
+      <div class="inline-form">
+        <label class="field"><span>Scenario</span><select data-ui="est.sc" data-scselect></select></label>
+        <label class="field"><span>Somma da versare</span><div class="inp"><input type="number" data-ui="est.amount" min="0" step="1000"><i>€</i></div></label>
+        <label class="field"><span>Dopo il versamento</span><select data-ui="est.mode"><option value="durata">Riduci la durata (rata uguale)</option><option value="rata">Riduci la rata (durata uguale)</option></select></label>
+        <label class="field"><span>Penale</span><div class="inp"><input type="number" data-ui="est.penale" min="0" step="0.1"><i>%</i></div></label>
+        <label class="field"><span>Risparmio minimo <em class="tip" title="Sotto questa soglia (risparmio netto / somma versata) il versamento è considerato marginale.">?</em></span><div class="inp"><input type="number" data-ui="est.minSaving" min="0" step="1"><i>%</i></div></label>
+        <label class="field"><span>Rend. alternativo lordo</span><div class="inp"><input type="number" data-profile="rendAlt" min="0" step="0.1"><i>%</i></div></label>
+      </div>
+    </div>
+    <div class="card reco" id="estReco" style="margin-top:16px"></div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card"><h3>Risparmio netto per anno del versamento</h3><div class="chart-box tall"><canvas id="chEstAnni"></canvas></div></div>
+      <div class="card">
+        <div class="card-head"><h3>Quanto versare?</h3><span class="spacer"></span><label class="row" style="gap:6px"><small>dopo l'anno</small><select data-ui="est.N" id="estNSel" style="width:auto"></select></label></div>
+        <div class="chart-box"><canvas id="chEstImporti"></canvas></div>
+        <div id="estAmountInfo"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><h3>Convenienza anno per anno</h3><span class="spacer"></span><small id="estTableInfo"></small></div>
+      <div class="table-wrap" id="estTable"></div>
+    </div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card">
+        <h3>Ridurre la durata o la rata?</h3>
+        <div id="estModes"></div>
+      </div>
+      <div class="card">
+        <h3>🎯 Obiettivi</h3>
+        <div class="inline-form">
+          <label class="field"><span>Finire il mutuo entro</span><div class="inp"><input type="number" data-ui="est.goalEndYears" min="1" step="1"><i>anni</i></div></label>
+          <label class="field"><span>versando dopo l'anno</span><div class="inp"><input type="number" data-ui="est.goalEndN" min="0" step="1"><i>anno</i></div></label>
+        </div>
+        <div id="goalEnd"></div>
+        <div class="inline-form" style="margin-top:10px">
+          <label class="field"><span>Portare la rata a</span><div class="inp"><input type="number" data-ui="est.goalRata" min="0" step="50"><i>€</i></div></label>
+          <label class="field"><span>versando dopo l'anno</span><div class="inp"><input type="number" data-ui="est.goalRataN" min="0" step="1"><i>anno</i></div></label>
+        </div>
+        <div id="goalRata"></div>
+      </div>
+    </div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head"><h3>🗓️ Piano di versamenti personalizzato</h3><span class="spacer"></span>
+          <select data-ui="est.plan.mode" style="width:auto"><option value="durata">Riduci durata</option><option value="rata">Riduci rata</option></select></div>
+        <div class="section-title">Versamenti una tantum (dopo l'anno · importo)</div>
+        <div class="plan-list" id="planList"></div>
+        <button class="btn small" id="btnPlanAdd" style="margin-top:8px">➕ Aggiungi versamento</button>
+        <div class="section-title" style="margin-top:14px">Versamento ricorrente annuo</div>
+        <div class="inline-form">
+          <label class="field"><span>Importo annuo</span><div class="inp"><input type="number" data-ui="est.plan.recAmount" min="0" step="500"><i>€</i></div></label>
+          <label class="field"><span>dall'anno</span><input type="number" data-ui="est.plan.recFrom" min="1" step="1"></label>
+          <label class="field"><span>all'anno</span><input type="number" data-ui="est.plan.recTo" min="1" step="1"></label>
+        </div>
+        <div class="kpis" id="planKpis" style="margin-top:12px"></div>
+      </div>
+      <div class="card"><h3>Debito residuo: piano base vs piano personalizzato</h3><div class="chart-box tall"><canvas id="chEstPiano"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>🔄 Surroga o rinegoziazione: conviene cambiare banca?</h3>
+      <p class="muted" style="font-size:.9rem">La surroga (portabilità) è gratuita per legge: nessuna spesa di istruttoria, perizia, notaio né imposta sostitutiva. Confronta il debito residuo con una nuova offerta a tasso fisso.</p>
+      <div class="inline-form">
+        <label class="field"><span>Surroga dopo l'anno</span><input type="number" data-ui="est.surN" min="1" step="1"></label>
+        <label class="field"><span>Nuovo TAN fisso</span><div class="inp"><input type="number" data-ui="est.surTan" min="0" step="0.05"><i>%</i></div></label>
+        <label class="field"><span>Nuova durata residua (vuoto = invariata)</span><div class="inp"><input type="number" data-ui="est.surAnni" min="1" step="1"><i>anni</i></div></label>
+      </div>
+      <div id="surroga" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- ======================= STRESS ======================= -->
+  <section class="tab-panel" id="tab-stress" role="tabpanel">
+    <p class="panel-intro">Cosa succede se l'Euribor sale o scende? Lo shock si applica per tutta la durata ai tassi variabili (e al periodo variabile dei misti). I mutui a tasso fisso non cambiano.</p>
+    <div class="card">
+      <div class="card-head"><h2>Rata mensile massima con variazioni dell'Euribor</h2></div>
+      <div class="table-wrap nolimit" id="stressTable"></div>
+      <div id="breakEven" style="margin-top:10px"></div>
+    </div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card"><h3>Rata massima per shock dei tassi</h3><div class="chart-box"><canvas id="chStress"></canvas></div></div>
+      <div class="card"><h3>TAN applicato nel tempo (scenario ipotizzato)</h3><div class="chart-box"><canvas id="chTan"></canvas></div></div>
+    </div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head"><h3>💼 Bilancio mensile familiare</h3><span class="spacer"></span><select data-ui="stress.sc" data-scselect style="width:auto"></select></div>
+        <div class="chart-box pie"><canvas id="chBudget"></canvas></div>
+        <div id="budgetInfo"></div>
+      </div>
+      <div class="card">
+        <h3>🧮 Quanto mi posso permettere?</h3>
+        <div class="inline-form">
+          <label class="field"><span>TAN ipotizzato</span><div class="inp"><input type="number" data-ui="stress.tan" min="0" step="0.05"><i>%</i></div></label>
+          <label class="field"><span>Durata</span><div class="inp"><input type="number" data-ui="stress.anni" min="1" max="40" step="1"><i>anni</i></div></label>
+          <label class="field"><span>LTV massimo</span><div class="inp"><input type="number" data-ui="stress.ltvMax" min="10" max="100" step="5"><i>%</i></div></label>
+          <label class="field"><span>Spese acquisto stimate</span><div class="inp"><input type="number" data-ui="stress.spesePerc" min="0" step="0.5"><i>%</i></div></label>
+        </div>
+        <div class="kpis two" id="affordKpis" style="margin-top:12px"></div>
+        <div class="chart-box short" style="margin-top:10px"><canvas id="chAfford"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= AFFITTO ======================= -->
+  <section class="tab-panel" id="tab-affitto" role="tabpanel">
+    <p class="panel-intro">Confronta il patrimonio netto di chi compra (valore casa − debito residuo − costi di vendita + eventuali risparmi investiti) con quello di chi resta in affitto e investe anticipo, spese e la differenza mensile al rendimento alternativo netto.</p>
+    <div class="card">
+      <div class="inline-form">
+        <label class="field"><span>Scenario</span><select data-ui="affitto.sc" data-scselect></select></label>
+        <label class="field"><span>Affitto mensile equivalente</span><div class="inp"><input type="number" data-ui="affitto.affitto" min="0" step="50"><i>€</i></div></label>
+        <label class="field"><span>Aumento affitto annuo</span><div class="inp"><input type="number" data-ui="affitto.incrAffitto" step="0.1"><i>%</i></div></label>
+        <label class="field"><span>Rivalutazione casa annua</span><div class="inp"><input type="number" data-ui="affitto.rivalutazione" step="0.1"><i>%</i></div></label>
+        <label class="field"><span>Manutenzione annua (% valore)</span><div class="inp"><input type="number" data-ui="affitto.manutenzione" min="0" step="0.1"><i>%</i></div></label>
+        <label class="field"><span>Altri costi proprietario annui</span><div class="inp"><input type="number" data-ui="affitto.altriCosti" min="0" step="50"><i>€</i></div></label>
+        <label class="field"><span>Costi di vendita</span><div class="inp"><input type="number" data-ui="affitto.costiVendita" min="0" step="0.5"><i>%</i></div></label>
+        <label class="field"><span>Orizzonte</span><div class="inp"><input type="number" data-ui="affitto.orizzonte" min="1" max="50" step="1"><i>anni</i></div></label>
+      </div>
+    </div>
+    <div class="card reco" id="affReco" style="margin-top:16px"></div>
+    <div class="grid c2" style="margin-top:16px">
+      <div class="card"><h3>Patrimonio netto: acquisto vs affitto</h3><div class="chart-box tall"><canvas id="chAffitto"></canvas></div></div>
+      <div class="card"><h3>Uscite cumulate</h3><div class="chart-box tall"><canvas id="chAffittoUscite"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="table-wrap" id="affTable"></div></div>
+  </section>
+
+  <!-- ======================= GUIDA ======================= -->
+  <section class="tab-panel guide" id="tab-guida" role="tabpanel">
+    <div class="grid c2">
+      <div class="card">
+        <h2>Come usare il simulatore</h2>
+        <ol>
+          <li><b>Profilo</b>: inserisci reddito, liquidità e spese. Servono per verificare la sostenibilità e il fondo di emergenza.</li>
+          <li><b>Scenari</b>: crea fino a 6 alternative (fisso, variabile, misto, durate e anticipi diversi). Tutto si aggiorna in tempo reale e viene salvato nel browser.</li>
+          <li><b>Confronto</b>: scegli la priorità e guarda lo scenario consigliato con motivazioni, tabella e grafici.</li>
+          <li><b>Piano di ammortamento</b>: rata per rata o anno per anno, esportabile in CSV/Excel.</li>
+          <li><b>Estinzione anticipata</b>: scopri fino a quale anno conviene versare liquidità, quanto versare e se ridurre rata o durata.</li>
+          <li><b>Stress test</b>: verifica la tenuta della rata se l'Euribor sale e quanto ti puoi permettere.</li>
+          <li><b>Affitto vs acquisto</b>: confronta il patrimonio nel tempo.</li>
+        </ol>
+        <p>Con <b>Condividi</b> ottieni un link con tutti i dati; con <b>Esporta/Importa</b> salvi un file JSON.</p>
+
+        <h3>Come viene scelto lo scenario migliore</h3>
+        <p>Ogni scenario riceve un punteggio da 0 a 100 dato dalla media pesata (in base alla priorità) di cinque indicatori normalizzati: costo totale, valore attuale dei costi, rata mensile, rischio (aumento della rata con Euribor +2%) e liquidità necessaria al rogito. Si sottraggono penalità se la rata supera la soglia del reddito, se la liquidità non basta, se il fondo di emergenza si riduce troppo, se l'LTV supera l'80% o se l'età a fine mutuo supera 75 anni.</p>
+
+        <h3>Come viene valutata l'estinzione anticipata</h3>
+        <p>Per ogni anno si simula un versamento e si calcolano i flussi risparmiati (rate, interessi, assicurazioni) meno la detrazione fiscale persa. Il <b>rendimento</b> è il tasso interno di questi flussi: si confronta con il rendimento alternativo netto. Il versamento è “conveniente” se rende di più e se il risparmio netto supera la soglia minima scelta: l'ultimo anno conveniente è la scadenza entro cui ha senso iniettare liquidità. L'importo consigliato è il minore tra l'importo oltre il quale il rendimento marginale scende sotto l'alternativa (es. per la detrazione) e la liquidità disponibile al netto del fondo di emergenza.</p>
+      </div>
+      <div class="card">
+        <h2>Glossario</h2>
+        <dl>
+          <dt>TAN</dt><dd>Tasso annuo nominale: il tasso puro applicato al capitale.</dd>
+          <dt>TAEG</dt><dd>Tasso annuo effettivo globale: include TAN, istruttoria, perizia, imposta sostitutiva, incasso rata, assicurazioni obbligatorie. È l'indicatore per confrontare offerte diverse.</dd>
+          <dt>LTV (Loan to Value)</dt><dd>Rapporto mutuo/valore della casa. Di norma le banche finanziano fino all'80%; oltre servono garanzie (es. Fondo di garanzia prima casa Consap, fino all'80% del capitale per categorie prioritarie).</dd>
+          <dt>Euribor e spread</dt><dd>Nel variabile il TAN = indice Euribor + spread della banca. Il floor è il tasso minimo, il CAP il tasso massimo.</dd>
+          <dt>IRS</dt><dd>Indice di riferimento dei mutui a tasso fisso: il TAN fisso è IRS + spread.</dd>
+          <dt>Ammortamento francese</dt><dd>Rata costante: all'inizio si pagano soprattutto interessi, poi soprattutto capitale.</dd>
+          <dt>Ammortamento italiano</dt><dd>Quota capitale costante: rata iniziale più alta e decrescente, meno interessi totali.</dd>
+          <dt>Imposta sostitutiva</dt><dd>0,25% del mutuo per la prima casa, 2% per la seconda casa.</dd>
+          <dt>Imposte d'acquisto</dt><dd>Da privato: registro 2% (prima casa) o 9% sul valore catastale (min. 1.000 €), ipotecaria e catastale 50 € ciascuna. Da impresa: IVA 4% (prima casa) o 10%, registro, ipotecaria e catastale 200 € ciascuna.</dd>
+          <dt>Detrazione interessi</dt><dd>19% degli interessi passivi e oneri accessori del mutuo prima casa, fino a 4.000 € l'anno (max 760 € di risparmio).</dd>
+          <dt>Surroga</dt><dd>Trasferimento gratuito del mutuo a un'altra banca con condizioni migliori (L. 40/2007).</dd>
+          <dt>Estinzione anticipata</dt><dd>Rimborso parziale o totale prima della scadenza: per i mutui casa delle persone fisiche non sono ammesse penali.</dd>
+          <dt>Valore attuale (VAN)</dt><dd>Somma dei pagamenti futuri “scontati” al rendimento alternativo: un euro pagato tra 20 anni pesa meno di un euro oggi.</dd>
+        </dl>
+        <div class="alert warn" style="margin-top:14px">⚠️ Simulazione indicativa: i risultati non costituiscono offerta né consulenza finanziaria. Imposte e costi sono stime basate sulla normativa vigente e possono variare; verifica sempre il PIES/ESIS della banca e chiedi al notaio.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>Simulatore Mutuo Casa · calcoli eseguiti localmente nel browser, nessun dato viene inviato. I risultati sono stime indicative.</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ui-core.js"></script>
+<script src="js/ui-scenari.js"></script>
+<script src="js/ui-confronto.js"></script>
+<script src="js/ui-piano.js"></script>
+<script src="js/ui-estinzione.js"></script>
+<script src="js/ui-estinzione2.js"></script>
+<script src="js/ui-stress.js"></script>
+<script src="js/ui-affitto.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
